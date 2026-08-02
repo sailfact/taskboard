@@ -1,7 +1,7 @@
 # Ratatui from the Ground Up — 03: Widgets
 
 > | # | Module | What you add |
-> |---|--------|--------------|
+> | --- | -------- | -------------- |
 > | 01 | Layouts | Project structure and the region system |
 > | 02 | Rendering UIs | The buffer, cells, `Text`/`Line`/`Span`, styling, the diff |
 > | **03** | **Widgets** | **Lists, gauges, tables, scrollbars, and writing your own** |
@@ -21,7 +21,7 @@ Five steps. No new dependencies.
 
 ---
 
-# Step 1 — `List` and the state problem
+## Step 1 — `List` and the state problem
 
 The cards in `board.rs` are hand-laid-out `Paragraph`s. `List` does that work and tracks selection —
 but selection is state, and state changes how the render pass is wired.
@@ -436,7 +436,7 @@ fn draw_column(
 }
 ```
 
-### `src/ui/mod.rs`
+### 1 `src/ui/mod.rs`
 
 ```rust
 mod board;
@@ -475,7 +475,7 @@ pub fn draw(app: &mut App, frame: &mut Frame) {
 `cargo run`. Arrow keys or `hjkl` move around; space pushes a card to the next column, backspace
 pulls it back.
 
-## What just happened
+### What just happened
 
 **`ui::draw` now takes `&mut App`, and that is the headline change.** Ratatui is immediate mode, so
 the *widget* is rebuilt from scratch every frame — but selection and scroll position must survive
@@ -511,7 +511,7 @@ list jumping sideways when a selection appears.
 
 ---
 
-# Step 2 — `LineGauge` replaces the hand-rolled bar
+## Step 2 — `LineGauge` replaces the hand-rolled bar
 
 `ui/progress.rs` was written in module 02 to show what cell-level drawing looks like. Its job is done.
 
@@ -571,7 +571,7 @@ pub fn draw(app: &App, frame: &mut Frame, area: Rect) {
 }
 ```
 
-### `src/ui/mod.rs`
+### 2 `src/ui/mod.rs`
 
 ```rust
 mod board;
@@ -608,7 +608,7 @@ pub fn draw(app: &mut App, frame: &mut Frame) {
 
 `cargo run`, then move a card with space. The bar tracks it.
 
-## What just happened
+### Step 2 What just happened
 
 **Twenty-two lines became eight, and the eight are more correct.** `LineGauge` clamps, handles a
 zero-width area, and does the same eighth-block arithmetic `progress.rs` did by hand.
@@ -631,7 +631,7 @@ header already shows one; without this you get it twice.
 
 ---
 
-# Step 3 — `Table` in the details pane
+## Step 3 — `Table` in the details pane
 
 Lists are one column of items. Tables are several, aligned.
 
@@ -709,7 +709,7 @@ fn focus(app: &App) -> Paragraph<'static> {
 
 `cargo run` past 100 columns. Move between cards and the lower half follows the selection.
 
-## What just happened
+## Step 3 - What just happened
 
 **`Table::new(rows, widths)` takes constraints, and they're the same `Constraint` type as `Layout`.**
 Column widths are solved by the same Cassowary solver from module 01 — `Fill(1)` on the name column
@@ -735,11 +735,11 @@ competing for, just like `Layout::spacing`.
 
 ---
 
-# Step 4 — `Scrollbar`
+## Step 4 — `Scrollbar`
 
 A list that scrolls without saying so is a list that looks broken.
 
-### `src/ui/board.rs`
+### Step 4 —`src/ui/board.rs`
 
 ```rust
 use ratatui::layout::{Margin, Rect};
@@ -863,7 +863,7 @@ fn draw_scrollbar(
 
 `cargo run`, shrink the window vertically, then hold `j` in the Todo column.
 
-## What just happened
+### Step 4 — What just happened
 
 **`Scrollbar` renders *over* the block's right border**, which is why it's given the full `area` (not
 `block.inner`) with one row trimmed off each end so it doesn't paint the corners. That's the intended
@@ -890,7 +890,7 @@ look used here.
 
 ---
 
-# Step 5 — Writing a widget
+## Step 5 — Writing a widget
 
 Everything so far has been a `draw` function taking a `Frame`. That's fine, but it isn't what the
 library does. Here's the real thing.
@@ -969,7 +969,7 @@ impl Widget for CardView<'_> {
 }
 ```
 
-### `src/ui/board.rs`
+### Step 5 —`src/ui/board.rs`
 
 ```rust
 use ratatui::layout::{Margin, Rect};
@@ -1104,7 +1104,7 @@ fn draw_scrollbar(
 }
 ```
 
-### `src/ui/mod.rs`
+### 3 `src/ui/mod.rs`
 
 ```rust
 mod board;
@@ -1143,7 +1143,7 @@ pub fn draw(app: &mut App, frame: &mut Frame) {
 `cargo run`. It looks near-identical — that's the point. The rendering moved without the output
 changing.
 
-## What just happened
+### Step 5 — What just happened
 
 **`Widget` has exactly one method.**
 
@@ -1194,9 +1194,9 @@ That's the decision this file is really teaching. Reach for `List` when items ar
 
 ---
 
-# Where you've landed
+## Where you've landed
 
-```
+```bash
 taskboard/
 ├── Cargo.toml
 └── src/
