@@ -10,6 +10,7 @@ use crate::ui;
 pub struct App {
     pub board: Board,
     pub show_help: bool,
+    pub frames: u64,
     should_quit: bool,
 }
 
@@ -20,6 +21,7 @@ impl App {
 
     pub fn run(mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.should_quit {
+            self.frames += 1;
             terminal.draw(|frame| ui::draw(&self, frame))?;
             self.handle(event::next_action()?);
         }

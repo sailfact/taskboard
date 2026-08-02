@@ -17,7 +17,7 @@ pub struct AppLayout {
 impl AppLayout {
     pub fn compute(area: Rect) -> Self {
         let [header, body, footer] = Layout::vertical([
-            Constraint::Length(3),
+            Constraint::Length(4),
             Constraint::Fill(1),
             Constraint::Length(1),
         ])

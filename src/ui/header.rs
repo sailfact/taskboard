@@ -1,18 +1,24 @@
 use ratatui::Frame;
-use ratatui::layout::Rect;
+use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, BorderType, Paragraph};
 
 use crate::app::App;
-use crate::ui::theme;
+use crate::ui::{progress, theme};
 
 pub fn draw(app: &App, frame: &mut Frame, area: Rect) {
     let board = &app.board;
-    let percent = if board.total() == 0 {
-        0
-    } else {
-        board.done() * 100 / board.total()
-    };
+    let percent = (board.ratio() * 100.0).round() as u16;
+
+    let block = Block::bordered()
+        .border_type(BorderType::Rounded)
+        .border_style(theme::BORDER);
+
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+
+    let [title_area, bar_area] =
+        Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(inner);
 
     let title = Line::from(vec![
         Span::styled("taskboard", theme::TITLE),
@@ -24,9 +30,13 @@ pub fn draw(app: &App, frame: &mut Frame, area: Rect) {
         Span::styled(format!("{percent}%"), theme::TITLE),
     ]);
 
-    let block = Block::bordered()
-        .border_type(BorderType::Rounded)
-        .border_style(theme::BORDER);
+    frame.render_widget(Paragraph::new(title), title_area);
 
-    frame.render_widget(Paragraph::new(title).block(block), area);
+    progress::draw(
+        frame,
+        bar_area,
+        board.ratio(),
+        theme::COLUMN_ACCENTS[2],
+        ratatui::style::Color::DarkGray,
+    );
 }

@@ -4,6 +4,7 @@ mod footer;
 mod header;
 mod help;
 mod layout;
+mod progress;
 mod theme;
 
 use ratatui::Frame;
@@ -22,7 +23,7 @@ pub fn draw(app: &App, frame: &mut Frame) {
         details::draw(app, frame, details);
     }
 
-    footer::draw(frame, layout.footer);
+    footer::draw(app, frame, layout.footer);
 
     if app.show_help {
         help::draw(frame, area);
