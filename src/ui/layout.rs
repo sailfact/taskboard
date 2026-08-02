@@ -1,4 +1,4 @@
-use ratatui::layout::{Constraint, Layout, Rect, Flex};
+use ratatui::layout::{Constraint, Flex, Layout, Rect};
 
 /// Terminals narrower than this don't get a details pane.
 const DETAILS_BREAKPOINT: u16 = 100;
@@ -36,12 +36,19 @@ impl AppLayout {
             .spacing(1)
             .areas(board);
 
-        Self { header, columns, details, footer }
-    }    
+        Self {
+            header,
+            columns,
+            details,
+            footer,
+        }
+    }
 }
 
 pub fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
-    let [area] = Layout::horizontal([horizontal]).flex(Flex::Center).areas(area);
+    let [area] = Layout::horizontal([horizontal])
+        .flex(Flex::Center)
+        .areas(area);
     let [area] = Layout::vertical([vertical]).flex(Flex::Center).areas(area);
     area
 }
