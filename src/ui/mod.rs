@@ -12,7 +12,7 @@ use ratatui::Frame;
 use crate::app::App;
 use crate::ui::layout::AppLayout;
 
-pub fn draw(app: &App, frame: &mut Frame) {
+pub fn draw(app: &mut App, frame: &mut Frame) {
     let area = frame.area();
     let layout = AppLayout::compute(area);
 

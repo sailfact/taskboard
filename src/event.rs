@@ -7,6 +7,12 @@ use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 pub enum Action {
     Quit,
     ToggleHelp,
+    SelectNext,
+    SelectPrev,
+    FocusNext,
+    FocusPrev,
+    Advance,
+    Retreat,
     None,
 }
 
@@ -22,6 +28,12 @@ fn key_to_action(key: KeyEvent) -> Action {
     match key.code {
         KeyCode::Char('q') | KeyCode::Esc => Action::Quit,
         KeyCode::Char('?') => Action::ToggleHelp,
+        KeyCode::Down | KeyCode::Char('j') => Action::SelectNext,
+        KeyCode::Up | KeyCode::Char('k') => Action::SelectPrev,
+        KeyCode::Right | KeyCode::Char('l') => Action::FocusNext,
+        KeyCode::Left | KeyCode::Char('h') => Action::FocusPrev,
+        KeyCode::Char(' ') | KeyCode::Enter => Action::Advance,
+        KeyCode::Backspace => Action::Retreat,
         _ => Action::None,
     }
 }

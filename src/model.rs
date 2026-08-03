@@ -66,6 +66,20 @@ impl Board {
             self.done() as f64 / self.total() as f64
         }
     }
+
+    /// Take the card at `index` out of `from` and append it to `to`.
+    ///
+    /// Returns the index the card landed at, or `None` if the move was impossible.
+    pub fn move_card(&mut self, from: usize, index: usize, to: usize) -> Option<usize> {
+        if from == to || index >= self.columns[from].cards.len() {
+            return None;
+        }
+
+        let card = self.columns[from].cards.remove(index);
+        self.columns[to].cards.push(card);
+
+        Some(self.columns[to].cards.len() - 1)
+    }
 }
 
 impl Default for Board {
@@ -85,6 +99,10 @@ impl Default for Board {
                         ),
                         Card::new("Pick a colour palette").tag("design").notes(
                             "Named colours respect the user's terminal theme. RGB does not.",
+                        ),
+                        Card::new("Wire up selection").tag("widgets").notes(
+                            "ListState owns the selected index and the scroll offset. The widget \
+                             is rebuilt every frame; the state is not.",
                         ),
                     ],
                 ),
