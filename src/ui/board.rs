@@ -1,12 +1,17 @@
 use ratatui::Frame;
-use ratatui::layout::Rect;
+use ratatui::layout::{Margin, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, BorderType, List, ListItem, ListState, Padding};
+use ratatui::widgets::{
+    Block, BorderType, List, ListItem, ListState, Padding, Scrollbar, ScrollbarOrientation,
+    ScrollbarState,
+};
 
 use crate::app::App;
 use crate::model::Column;
 use crate::ui::theme;
+
+const CARD_LINES: usize = 2;
 
 pub fn draw(app: &mut App, frame: &mut Frame, areas: [Rect; 3]) {
     for index in 0..areas.len() {
@@ -47,6 +52,8 @@ fn draw_column(
         .padding(Padding::horizontal(1))
         .title(title);
 
+    let inner_height = block.inner(area).height as usize;
+
     let items: Vec<ListItem> = column
         .cards
         .iter()
@@ -72,4 +79,38 @@ fn draw_column(
         .highlight_symbol(Line::from("▌"));
 
     frame.render_stateful_widget(list, area, state);
+
+    draw_scrollbar(column, state, inner_height, frame, area)
+}
+
+fn draw_scrollbar(
+    column: &Column,
+    state: &ListState,
+    inner_height: usize,
+    frame: &mut Frame,
+    area: Rect,
+) {
+    let total = column.cards.len() * CARD_LINES;
+
+    if total <= inner_height {
+        return;
+    }
+
+    let mut scroll = ScrollbarState::new(total.saturating_sub(inner_height))
+        .position(state.offset() * CARD_LINES);
+
+    let track = area.inner(Margin {
+        horizontal: 0,
+        vertical: 1,
+    });
+
+    frame.render_stateful_widget(
+        Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(None)
+            .end_symbol(None)
+            .thumb_style(theme::BORDER_FOCUS)
+            .track_style(theme::BORDER),
+        track,
+        &mut scroll,
+    );
 }

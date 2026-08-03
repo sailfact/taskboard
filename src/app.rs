@@ -12,9 +12,7 @@ pub struct App {
     pub board: Board,
     pub show_help: bool,
     pub frames: u64,
-    /// Which column has the keyboard.
     pub focus: usize,
-    /// One selection + scroll offset per column. Owned by the app, not the widget.
     pub lists: [ListState; 3],
     should_quit: bool,
 }

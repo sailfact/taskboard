@@ -1,10 +1,11 @@
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, BorderType, Paragraph};
+use ratatui::widgets::{Block, BorderType, LineGauge, Paragraph};
 
 use crate::app::App;
-use crate::ui::{progress, theme};
+use crate::ui::theme;
 
 pub fn draw(app: &App, frame: &mut Frame, area: Rect) {
     let board = &app.board;
@@ -32,11 +33,13 @@ pub fn draw(app: &App, frame: &mut Frame, area: Rect) {
 
     frame.render_widget(Paragraph::new(title), title_area);
 
-    progress::draw(
-        frame,
-        bar_area,
-        board.ratio(),
-        theme::COLUMN_ACCENTS[2],
-        ratatui::style::Color::DarkGray,
-    );
+    let gauge = LineGauge::default()
+        .ratio(board.ratio())
+        .filled_style(Style::new().fg(theme::COLUMN_ACCENTS[2]))
+        .unfilled_style(theme::MUTED)
+        .filled_symbol("━")
+        .unfilled_symbol("─")
+        .label("");
+
+    frame.render_widget(gauge, bar_area);
 }
