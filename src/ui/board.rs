@@ -1,27 +1,29 @@
 use ratatui::Frame;
 use ratatui::layout::{Margin, Rect};
 use ratatui::style::{Color, Style};
-use ratatui::text::{Line, Span, Text};
+use ratatui::text::{Line, Span};
 use ratatui::widgets::{
     Block, BorderType, List, ListItem, ListState, Padding, Scrollbar, ScrollbarOrientation,
-    ScrollbarState,
+    ScrollbarState, Widget,
 };
 
 use crate::app::App;
 use crate::model::Column;
+use crate::ui::card::CardView;
 use crate::ui::theme;
 
+/// Each card renders as a title line plus a tag line.
 const CARD_LINES: usize = 2;
 
 pub fn draw(app: &mut App, frame: &mut Frame, areas: [Rect; 3]) {
-    for index in 0..areas.len() {
+    for (index, area) in areas.into_iter().enumerate() {
         let focused = index == app.focus;
         let accent = theme::column(index);
 
         let column = &app.board.columns[index];
         let state = &mut app.lists[index];
 
-        draw_column(column, state, accent, focused, frame, areas[index]);
+        draw_column(column, state, accent, focused, frame, area);
     }
 }
 
@@ -57,30 +59,42 @@ fn draw_column(
     let items: Vec<ListItem> = column
         .cards
         .iter()
-        .map(|card| {
-            let mut lines = vec![Line::styled(card.title.as_str(), Style::new().fg(accent))];
+        .enumerate()
+        .map(|(index, card)| {
+            let selected = focused && state.selected() == Some(index);
+            let view = CardView::new(card).accent(accent).selected(selected);
 
-            match &card.tag {
-                Some(tag) => lines.push(Line::styled(format!("#{tag}"), theme::TAG)),
-                None => lines.push(Line::raw("")),
-            }
+            // Render the widget into a two-row buffer, then hand those rows to the list.
+            let mut scratch = ratatui::buffer::Buffer::empty(Rect::new(0, 0, 40, 2));
+            view.render(scratch.area, &mut scratch);
 
-            ListItem::new(Text::from(lines))
+            ListItem::new(buffer_to_lines(&scratch))
         })
         .collect();
 
     let list = List::new(items)
         .block(block)
-        .highlight_style(if focused {
-            theme::SELECTED
-        } else {
-            theme::SELECTED_BLUR
-        })
         .highlight_symbol(Line::from("▌"));
 
     frame.render_stateful_widget(list, area, state);
 
-    draw_scrollbar(column, state, inner_height, frame, area)
+    draw_scrollbar(column, state, inner_height, frame, area);
+}
+
+/// Read a buffer's rows back out as styled lines.
+fn buffer_to_lines(buffer: &ratatui::buffer::Buffer) -> Vec<Line<'static>> {
+    (0..buffer.area.height)
+        .map(|y| {
+            let spans = (0..buffer.area.width)
+                .map(|x| {
+                    let cell = &buffer[(x, y)];
+                    Span::styled(cell.symbol().to_string(), cell.style())
+                })
+                .collect::<Vec<_>>();
+
+            Line::from(spans)
+        })
+        .collect()
 }
 
 fn draw_scrollbar(

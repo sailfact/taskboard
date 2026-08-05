@@ -1,4 +1,5 @@
 mod board;
+mod card;
 mod details;
 mod footer;
 mod header;
