@@ -21,12 +21,12 @@ Five steps. No new dependencies.
 
 ---
 
-## Step 1 — `List` and the state problem
+## Step 1 — List and state problem
 
 The cards in `board.rs` are hand-laid-out `Paragraph`s. `List` does that work and tracks selection —
 but selection is state, and state changes how the render pass is wired.
 
-### `src/model.rs`
+`src/model.rs`
 
 ```rust
 #[derive(Debug, Clone)]
@@ -158,7 +158,7 @@ impl Default for Board {
 }
 ```
 
-### `src/event.rs`
+`src/event.rs`
 
 ```rust
 use std::io;
@@ -202,7 +202,7 @@ pub fn key_to_action(key: KeyEvent) -> Action {
 }
 ```
 
-### `src/app.rs`
+`src/app.rs`
 
 ```rust
 use std::io;
@@ -308,7 +308,7 @@ impl App {
 }
 ```
 
-### `src/ui/theme.rs`
+`src/ui/theme.rs`
 
 ```rust
 use ratatui::style::{Color, Modifier, Style};
@@ -355,7 +355,7 @@ pub fn column(index: usize) -> Color {
 }
 ```
 
-### `src/ui/board.rs`
+`src/ui/board.rs`
 
 ```rust
 use ratatui::layout::Rect;
@@ -436,7 +436,7 @@ fn draw_column(
 }
 ```
 
-### 1 `src/ui/mod.rs`
+`src/ui/mod.rs`
 
 ```rust
 mod board;
@@ -475,7 +475,7 @@ pub fn draw(app: &mut App, frame: &mut Frame) {
 `cargo run`. Arrow keys or `hjkl` move around; space pushes a card to the next column, backspace
 pulls it back.
 
-### What just happened
+### What just happened - List and state problem
 
 **`ui::draw` now takes `&mut App`, and that is the headline change.** Ratatui is immediate mode, so
 the *widget* is rebuilt from scratch every frame — but selection and scroll position must survive
@@ -511,7 +511,7 @@ list jumping sideways when a selection appears.
 
 ---
 
-## Step 2 — `LineGauge` replaces the hand-rolled bar
+## Step 2 — LineGauge replaces the hand-rolled bar
 
 `ui/progress.rs` was written in module 02 to show what cell-level drawing looks like. Its job is done.
 
@@ -521,7 +521,7 @@ Delete the file:
 rm src/ui/progress.rs
 ```
 
-### `src/ui/header.rs`
+`src/ui/header.rs`
 
 ```rust
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -571,7 +571,7 @@ pub fn draw(app: &App, frame: &mut Frame, area: Rect) {
 }
 ```
 
-### 2 `src/ui/mod.rs`
+`src/ui/mod.rs`
 
 ```rust
 mod board;
@@ -608,7 +608,7 @@ pub fn draw(app: &mut App, frame: &mut Frame) {
 
 `cargo run`, then move a card with space. The bar tracks it.
 
-### Step 2 What just happened
+### What just happened - LineGauge
 
 **Twenty-two lines became eight, and the eight are more correct.** `LineGauge` clamps, handles a
 zero-width area, and does the same eighth-block arithmetic `progress.rs` did by hand.
@@ -631,11 +631,11 @@ header already shows one; without this you get it twice.
 
 ---
 
-## Step 3 — `Table` in the details pane
+## Step 3 — Table in the details pane
 
 Lists are one column of items. Tables are several, aligned.
 
-### `src/ui/details.rs`
+`src/ui/details.rs`
 
 ```rust
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -735,11 +735,11 @@ competing for, just like `Layout::spacing`.
 
 ---
 
-## Step 4 — `Scrollbar`
+## Step 4 — Scrollbar
 
 A list that scrolls without saying so is a list that looks broken.
 
-### Step 4 —`src/ui/board.rs`
+`src/ui/board.rs`
 
 ```rust
 use ratatui::layout::{Margin, Rect};
@@ -863,7 +863,7 @@ fn draw_scrollbar(
 
 `cargo run`, shrink the window vertically, then hold `j` in the Todo column.
 
-### Step 4 — What just happened
+### What just happened - Scrollbar
 
 **`Scrollbar` renders *over* the block's right border**, which is why it's given the full `area` (not
 `block.inner`) with one row trimmed off each end so it doesn't paint the corners. That's the intended
@@ -895,7 +895,7 @@ look used here.
 Everything so far has been a `draw` function taking a `Frame`. That's fine, but it isn't what the
 library does. Here's the real thing.
 
-### `src/ui/card.rs`
+`src/ui/card.rs`
 
 ```rust
 use ratatui::buffer::Buffer;
@@ -969,7 +969,7 @@ impl Widget for CardView<'_> {
 }
 ```
 
-### Step 5 —`src/ui/board.rs`
+`src/ui/board.rs`
 
 ```rust
 use ratatui::layout::{Margin, Rect};
@@ -1104,7 +1104,7 @@ fn draw_scrollbar(
 }
 ```
 
-### 3 `src/ui/mod.rs`
+`src/ui/mod.rs`
 
 ```rust
 mod board;
@@ -1143,7 +1143,7 @@ pub fn draw(app: &mut App, frame: &mut Frame) {
 `cargo run`. It looks near-identical — that's the point. The rendering moved without the output
 changing.
 
-### Step 5 — What just happened
+### What just happened - Widgets
 
 **`Widget` has exactly one method.**
 
@@ -1228,7 +1228,7 @@ Run it and confirm:
 That last one is the assertion worth checking carefully — it's the `total - visible` detail, and it's
 wrong in a lot of published Ratatui code.
 
-## You should now be able to explain
+### You should now be able to explain
 
 - Why `ui::draw` had to take `&mut App`, and what that says about immediate mode.
 - What `ListState` holds, who updates the offset, and why clamping after a mutation is your job.

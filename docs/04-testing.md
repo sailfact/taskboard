@@ -21,12 +21,12 @@ Five steps, each ending in a green `cargo test`.
 
 ---
 
-# Step 1 — The parts that need no terminal
+## Step 1 — The parts that need no terminal
 
 Start with the code that was designed to be testable, and notice that no Ratatui testing machinery is
 required at all.
 
-### `src/ui/layout.rs`
+`src/ui/layout.rs`
 
 ```rust
 use ratatui::layout::{Constraint, Flex, Layout, Rect};
@@ -190,11 +190,11 @@ exact check.
 
 ---
 
-# Step 2 — Testing state transitions
+## Step 2 — Testing state transitions
 
 `App::handle` maps an `Action` to a state change. No terminal, no rendering, no I/O.
 
-### `src/app.rs`
+`src/app.rs`
 
 ```rust
 use std::io;
@@ -416,7 +416,7 @@ mod tests {
 }
 ```
 
-### `src/event.rs`
+`src/event.rs`
 
 ```rust
 use std::io;
@@ -523,7 +523,7 @@ When you add modifier-sensitive bindings, use `KeyEvent::new(code, KeyModifiers:
 Now the rendering. `TestBackend` is a `Backend` implementation whose "terminal" is a `Buffer` in
 memory.
 
-### `tests/render.rs`
+`tests/render.rs`
 
 ```rust
 use ratatui::backend::TestBackend;
@@ -606,7 +606,7 @@ fn buffer_text(buffer: &Buffer) -> String {
 }
 ```
 
-### `src/lib.rs`
+`src/lib.rs`
 
 ```rust
 pub mod app;
@@ -627,7 +627,7 @@ fn main() -> io::Result<()> {
 }
 ```
 
-### `Cargo.toml`
+`Cargo.toml`
 
 ```toml
 [package]
@@ -676,12 +676,12 @@ extraction throws them away. Colour assertions come next.
 
 ---
 
-# Step 4 — Exact buffers and styles
+## Step 4 — Exact buffers and styles
 
 Substring matching won't catch a border drawn in the wrong colour, or content one cell off. For that,
 compare whole buffers.
 
-### `tests/exact.rs`
+`tests/exact.rs`
 
 ```rust
 use ratatui::backend::TestBackend;
@@ -855,12 +855,12 @@ character.
 
 ---
 
-# Step 5 — Snapshots with `insta`
+## Step 5 — Snapshots with `insta`
 
 Exact buffer tests are precise and tedious to write by hand. Snapshot testing writes them for you and
 turns review into the workflow.
 
-### `Cargo.toml`
+`Cargo.toml`
 
 ```toml
 [package]
@@ -875,7 +875,7 @@ ratatui = "0.30"
 insta = "1"
 ```
 
-### `tests/snapshots.rs`
+`tests/snapshots.rs`
 
 ```rust
 use ratatui::backend::TestBackend;
@@ -1005,7 +1005,7 @@ Worth keeping in mind before you put `SystemTime::now()` in a widget.
 
 ---
 
-# Where you've landed
+## Where you've landed
 
 ```
 taskboard/
@@ -1044,7 +1044,7 @@ Worth confirming:
 - Changing an accent colour in `theme.rs` breaks the style test and the snapshots, but *not* the
   layout or substring tests. That separation is deliberate.
 
-## You should now be able to explain
+### You should now be able to explain
 
 - Why layout and state logic are testable without any Ratatui testing machinery at all.
 - Why a crate needs `lib.rs` before anything in `tests/` can see it.
