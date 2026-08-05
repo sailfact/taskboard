@@ -37,3 +37,32 @@ fn key_to_action(key: KeyEvent) -> Action {
         _ => Action::None,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn press(code: KeyCode) -> Action {
+        key_to_action(KeyEvent::from(code))
+    }
+
+    #[test]
+    fn vim_and_arrow_keys_agree() {
+        assert_eq!(press(KeyCode::Char('j')), press(KeyCode::Down));
+        assert_eq!(press(KeyCode::Char('k')), press(KeyCode::Up));
+        assert_eq!(press(KeyCode::Char('l')), press(KeyCode::Right));
+        assert_eq!(press(KeyCode::Char('h')), press(KeyCode::Left));
+    }
+
+    #[test]
+    fn both_quit_keys_quit() {
+        assert_eq!(press(KeyCode::Char('q')), Action::Quit);
+        assert_eq!(press(KeyCode::Esc), Action::Quit);
+    }
+
+    #[test]
+    fn unbound_keys_do_nothing() {
+        assert_eq!(press(KeyCode::Char('z')), Action::None);
+        assert_eq!(press(KeyCode::F(7)), Action::None);
+    }
+}

@@ -14,7 +14,7 @@ pub struct App {
     pub frames: u64,
     pub focus: usize,
     pub lists: [ListState; 3],
-    should_quit: bool,
+    pub should_quit: bool,
 }
 
 impl App {
@@ -54,15 +54,34 @@ impl App {
     }
 
     fn select_next(&mut self) {
-        if !self.board.columns[self.focus].cards.is_empty() {
-            self.lists[self.focus].select_next();
+        let len = self.board.columns[self.focus].cards.len();
+
+        if len == 0 {
+            return;
         }
+
+        // ListState::select_next has no idea how many items exist, so clamp here.
+        let next = match self.lists[self.focus].selected() {
+            Some(index) => (index + 1).min(len - 1),
+            None => 0,
+        };
+
+        self.lists[self.focus].select(Some(next));
     }
 
     fn select_prev(&mut self) {
-        if !self.board.columns[self.focus].cards.is_empty() {
-            self.lists[self.focus].select_previous();
+        let len = self.board.columns[self.focus].cards.len();
+
+        if len == 0 {
+            return;
         }
+
+        let prev = match self.lists[self.focus].selected() {
+            Some(index) => index.saturating_sub(1),
+            None => 0,
+        };
+
+        self.lists[self.focus].select(Some(prev));
     }
 
     fn focus_by(&mut self, delta: isize) {
@@ -95,5 +114,116 @@ impl App {
             let index = self.lists[column].selected().unwrap_or(0).min(len - 1);
             self.lists[column].select(Some(index));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::Column;
+
+    /// A board with predictable, minimal contents.
+    fn fixture() -> App {
+        let mut app = App {
+            board: Board {
+                columns: [
+                    Column::new("Todo", [Card::new("a"), Card::new("b")]),
+                    Column::new("Doing", [Card::new("c")]),
+                    Column::new("Done", []),
+                ],
+            },
+            ..App::default()
+        };
+        app.lists[0].select(Some(0));
+        app
+    }
+
+    #[test]
+    fn quit_sets_the_flag() {
+        let mut app = fixture();
+        assert!(!app.should_quit);
+
+        app.handle(Action::Quit);
+
+        assert!(app.should_quit);
+    }
+
+    #[test]
+    fn help_toggles() {
+        let mut app = fixture();
+
+        app.handle(Action::ToggleHelp);
+        assert!(app.show_help);
+
+        app.handle(Action::ToggleHelp);
+        assert!(!app.show_help);
+    }
+
+    #[test]
+    fn focus_wraps_in_both_directions() {
+        let mut app = fixture();
+
+        app.handle(Action::FocusPrev);
+        assert_eq!(app.focus, 2);
+
+        app.handle(Action::FocusNext);
+        assert_eq!(app.focus, 0);
+    }
+
+    #[test]
+    fn selection_does_not_run_past_the_end() {
+        let mut app = fixture();
+
+        for _ in 0..10 {
+            app.handle(Action::SelectNext);
+        }
+
+        assert_eq!(app.lists[0].selected(), Some(1));
+    }
+
+    #[test]
+    fn advancing_moves_the_card_and_follows_it() {
+        let mut app = fixture();
+
+        app.handle(Action::Advance);
+
+        assert_eq!(app.board.columns[0].cards.len(), 1);
+        assert_eq!(app.board.columns[1].cards.len(), 2);
+        assert_eq!(app.lists[1].selected(), Some(1));
+    }
+
+    #[test]
+    fn emptying_a_column_clears_its_selection() {
+        let mut app = fixture();
+        app.focus = 1;
+        app.lists[1].select(Some(0));
+
+        app.handle(Action::Advance);
+
+        assert!(app.board.columns[1].cards.is_empty());
+        assert_eq!(app.lists[1].selected(), None);
+    }
+
+    #[test]
+    fn focusing_an_empty_column_selects_nothing() {
+        let mut app = fixture();
+        app.focus = 1;
+
+        app.handle(Action::FocusNext);
+
+        assert_eq!(app.focus, 2);
+        assert_eq!(app.lists[2].selected(), None);
+        assert!(app.selected_card().is_none());
+    }
+
+    #[test]
+    fn advancing_with_no_selection_is_a_no_op() {
+        let mut app = fixture();
+        app.focus = 2;
+        let before = app.board.total();
+
+        app.handle(Action::Advance);
+
+        assert_eq!(app.board.total(), before);
     }
 }
