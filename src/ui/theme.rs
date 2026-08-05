@@ -16,7 +16,7 @@ pub const SELECTED: Style = Style::new()
     .bg(Color::DarkGray)
     .add_modifier(Modifier::BOLD);
 
-pub const SELECTED_BLUR: Style = Style::new().add_modifier(Modifier::DIM);
+// pub const SELECTED_BLUR: Style = Style::new().add_modifier(Modifier::DIM);
 
 pub const POPUP: Style = Style::new().bg(Color::Black);
 

@@ -52,3 +52,91 @@ pub fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect 
     let [area] = Layout::vertical([vertical]).flex(Flex::Center).areas(area);
     area
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn header_and_footer_are_fixed_height() {
+        let layout = AppLayout::compute(Rect::new(0, 0, 120, 40));
+
+        assert_eq!(layout.header.height, 4);
+        assert_eq!(layout.footer.height, 1);
+    }
+
+    #[test]
+    fn body_absorbs_the_remaining_height() {
+        let layout = AppLayout::compute(Rect::new(0, 0, 120, 40));
+        let body_height = layout.columns[0].height;
+
+        assert_eq!(
+            layout.header.height + body_height + layout.footer.height,
+            40
+        );
+    }
+
+    #[test]
+    fn details_pane_appears_at_the_breakpoint() {
+        assert!(
+            AppLayout::compute(Rect::new(0, 0, 99, 40))
+                .details
+                .is_none()
+        );
+        assert!(
+            AppLayout::compute(Rect::new(0, 0, 100, 40))
+                .details
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn details_pane_has_a_fixed_width() {
+        let layout = AppLayout::compute(Rect::new(0, 0, 200, 40));
+
+        assert_eq!(layout.details.map(|d| d.width), Some(DETAILS_WIDTH));
+    }
+
+    #[test]
+    fn columns_do_not_overlap() {
+        let layout = AppLayout::compute(Rect::new(0, 0, 120, 40));
+
+        for pair in layout.columns.windows(2) {
+            assert!(
+                pair[0].right() <= pair[1].left(),
+                "{:?} overlaps {:?}",
+                pair[0],
+                pair[1]
+            );
+        }
+    }
+
+    #[test]
+    fn columns_stay_inside_the_board() {
+        let layout = AppLayout::compute(Rect::new(0, 0, 120, 40));
+        let last = layout.columns[2];
+
+        match layout.details {
+            Some(details) => assert!(last.right() <= details.left()),
+            None => assert!(last.right() <= 120),
+        }
+    }
+
+    #[test]
+    fn no_panic_at_any_plausible_size() {
+        for width in 0..=200 {
+            for height in [0, 1, 2, 3, 4, 5, 40] {
+                let _ = AppLayout::compute(Rect::new(0, 0, width, height));
+            }
+        }
+    }
+
+    #[test]
+    fn centering_is_symmetric() {
+        let area = Rect::new(0, 0, 100, 50);
+        let centred = center(area, Constraint::Length(40), Constraint::Length(10));
+
+        assert_eq!(centred.left(), area.width - centred.right());
+        assert_eq!(centred.top(), area.height - centred.bottom());
+    }
+}
