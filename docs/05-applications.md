@@ -1,7 +1,7 @@
 # Ratatui from the Ground Up — 05: Applications
 
 > | # | Module | What you add |
-> |---|--------|--------------|
+> | --- | -------- | -------------- |
 > | 01 | Layouts | Project structure and the region system |
 > | 02 | Rendering UIs | The buffer, cells, `Text`/`Line`/`Span`, styling, the diff |
 > | 03 | Widgets | Lists, gauges, tables, scrollbars, and writing your own |
@@ -22,7 +22,7 @@ Five steps. Five new dependencies, added as they're needed.
 
 ---
 
-# Step 1 — Errors that don't wreck your terminal
+## Step 1 — Errors that don't wreck your terminal
 
 `io::Result` has carried us this far. It stops being enough the moment anything can fail for a reason
 that isn't I/O — and a panic in raw mode is genuinely destructive.
@@ -31,7 +31,7 @@ that isn't I/O — and a panic in raw mode is genuinely destructive.
 cargo add color-eyre
 ```
 
-### `Cargo.toml`
+`Cargo.toml`
 
 ```toml
 [package]
@@ -281,12 +281,12 @@ via `?`. That's why `run` can propagate `io::Error` from `terminal.draw` without
 
 ---
 
-# Step 2 — A non-blocking event loop
+## Step 2 — A non-blocking event loop
 
 `event::read()` blocks. That was the right call while nothing moved on its own. Now the UI needs to
 update without a keypress — for a clock, an autosave indicator, an animation, or just a heartbeat.
 
-### `src/event.rs`
+`src/event.rs`
 
 ```rust
 use std::sync::mpsc::{self, Receiver, Sender};
@@ -433,7 +433,7 @@ mod tests {
 }
 ```
 
-### `src/app.rs` — the run loop only
+`src/app.rs` — the run loop only
 
 Replace `run` and add `ticks`; everything else in the file is unchanged:
 
@@ -468,7 +468,7 @@ use crate::event::{Action, Event, EventLoop};
     pub ticks: u64,
 ```
 
-### `src/ui/footer.rs`
+`src/ui/footer.rs`
 
 ```rust
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -508,7 +508,7 @@ pub fn draw(app: &App, frame: &mut Frame, area: Rect) {
 
 `cargo run`. The spinner turns on its own. Press nothing.
 
-## What just happened
+### Step 2 - What just happened
 
 **`event::poll(timeout)` is the primitive that makes this possible.** It returns `Ok(true)` if input
 is available within the timeout, `Ok(false)` otherwise, and only then do you call `read()`, which is
@@ -546,7 +546,7 @@ battery that matters. There's no requirement to have ticks at all.
 
 ---
 
-# Step 3 — Configuration
+## Step 3 — Configuration
 
 `theme.rs` hard-codes the palette. Users have opinions about colours.
 
@@ -556,7 +556,7 @@ cargo add toml
 cargo add directories
 ```
 
-### `src/config.rs`
+`src/config.rs`
 
 ```rust
 use std::fs;
@@ -716,7 +716,7 @@ mod tests {
 }
 ```
 
-### `Cargo.toml`
+`Cargo.toml`
 
 ```toml
 [package]
@@ -735,7 +735,7 @@ toml = "0.8"
 insta = "1"
 ```
 
-### `src/ui/theme.rs`
+`src/ui/theme.rs`
 
 ```rust
 use ratatui::style::{Color, Modifier, Style};
@@ -799,7 +799,7 @@ Then create a starter file and edit it:
 cargo run -- --write-config
 ```
 
-## What just happened
+### Step 3 - What just happened
 
 **`#[serde(default)]` on the struct is what makes a partial config work.** Every absent field falls
 back to `Default`, so a user's file can contain one line. Without it, a config missing any field
@@ -830,7 +830,7 @@ two of the three.
 
 ---
 
-# Step 4 — Logging
+## Step 4 — Logging
 
 `println!` is unavailable: stdout is the UI. Anything you print lands in the middle of your board and
 desynchronises Ratatui's diff.
@@ -841,7 +841,7 @@ cargo add tracing-subscriber --features env-filter
 cargo add tracing-appender
 ```
 
-### `src/logging.rs`
+`src/logging.rs`
 
 ```rust
 use std::fs;
@@ -889,7 +889,7 @@ pub fn log_path() -> Option<PathBuf> {
 }
 ```
 
-### `src/app.rs` — instrumenting the interesting transitions
+`src/app.rs` — instrumenting the interesting transitions
 
 Add `use tracing::{debug, info};` and log where a bug would want a trail:
 
@@ -911,7 +911,7 @@ Add `use tracing::{debug, info};` and log where a bug would want a trail:
     }
 ```
 
-### `src/main.rs`
+`src/main.rs`
 
 ```rust
 use color_eyre::eyre::bail;
@@ -950,7 +950,7 @@ tail -f ~/.local/share/taskboard/taskboard.log
 TASKBOARD_LOG=debug cargo run
 ```
 
-## What just happened
+### Step 4 - What just happened
 
 **Logging to a file is not a preference, it's a requirement.** Ratatui's diff assumes it is the only
 thing writing to the terminal. A stray `println!` shifts the cursor, and every subsequent frame
@@ -980,7 +980,7 @@ state and the things that fail.
 
 ---
 
-# Step 5 — Shipping
+## Step 5 — Shipping
 
 Argument parsing, persistence, and the build.
 
@@ -989,7 +989,7 @@ cargo add clap --features derive
 cargo add serde_json
 ```
 
-### `src/storage.rs`
+`src/storage.rs`
 
 ```rust
 use std::fs;
@@ -1045,7 +1045,7 @@ fn resolve(override_path: Option<&PathBuf>) -> Option<PathBuf> {
 }
 ```
 
-### `src/model.rs` — derives only
+`src/model.rs` — derives only
 
 Add the serde derives to the three types; the rest of the file is unchanged:
 
@@ -1076,7 +1076,7 @@ pub struct Board {
 }
 ```
 
-### `src/cli.rs`
+`src/cli.rs`
 
 ```rust
 use std::path::PathBuf;
@@ -1101,7 +1101,7 @@ pub struct Cli {
 }
 ```
 
-### `src/main.rs`
+`src/main.rs`
 
 ```rust
 use clap::Parser;
@@ -1169,7 +1169,7 @@ fn print_path(label: &str, path: Option<std::path::PathBuf>) {
 `App::run` now returns `Result<Self>` rather than `Result<()>`, so `main` can save the board it hands
 back, and `storage` gains a `pub fn default_board_path()` wrapping `resolve(None)`.
 
-### `Cargo.toml`
+`Cargo.toml`
 
 ```toml
 [package]
@@ -1211,7 +1211,7 @@ cargo build --release
 ./target/release/taskboard --paths
 ```
 
-## What just happened
+### Step 5 - What just happened
 
 **Save on exit, and give `run` an owner to hand the board back to.** Returning `Result<Self>` from
 `run` keeps persistence out of the run loop entirely — `main` owns the lifecycle, `App` owns the
@@ -1245,9 +1245,9 @@ no benefit.
 
 ---
 
-# Where you've landed
+## Where you've landed
 
-```
+```bash
 taskboard/
 ├── Cargo.toml
 ├── README.md
@@ -1295,7 +1295,7 @@ Run the checklist:
 - `panic!` inserted anywhere still leaves you at a working shell prompt.
 - `taskboard | head` refuses cleanly instead of hanging.
 
-## You should now be able to explain
+### You should now be able to explain
 
 - Why a TUI needs two hooks, and what a panic in raw mode does to a terminal.
 - How `event::poll` turns a blocking read into a tick loop, and why draw comes before block.
@@ -1306,7 +1306,7 @@ Run the checklist:
 
 ---
 
-# Where to go next
+## Where to go next
 
 You've built the whole stack: regions, cells, widgets, tests, and the plumbing around them. The
 things most worth adding to `taskboard` from here, roughly in order of how much they'll teach you:
