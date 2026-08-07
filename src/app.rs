@@ -1,4 +1,4 @@
-use std::io;
+use color_eyre::Result;
 
 use ratatui::DefaultTerminal;
 use ratatui::widgets::ListState;
@@ -26,13 +26,17 @@ impl App {
         app
     }
 
-    pub fn run(mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+    pub fn run(mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.should_quit {
             self.frames += 1;
             terminal.draw(|frame| ui::draw(&mut self, frame))?;
             self.handle(event::next_action()?);
         }
         Ok(())
+    }
+
+    pub fn should_quit(&self) -> bool {
+        self.should_quit
     }
 
     /// The card the user is currently looking at, if any.
